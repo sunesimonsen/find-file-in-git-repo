@@ -11,7 +11,7 @@
 ;; Using default-directory searches upward for a .git repo directory,
 ;; then, feeds files into ido-completing-read using git ls-files.
 
-(defun find-file-in-git-repo ()
+(defun find-file-in-git-repo (&optional initial-input)
   (interactive)
   (let* ((repo (find-git-repo default-directory))
          (files (shell-command-to-string (format "cd %s && git ls-files --cached --others --exclude-standard" repo))))
@@ -20,7 +20,8 @@
              (ido-completing-read
               "find in git repo: "
               (remove-if (lambda (x) (string= "" x))
-              (split-string files "\n")))))))
+                         (split-string files "\n"))
+              nil nil initial-input)))))
 
 (defun find-git-repo (dir)
   (if (string= "/" dir)
