@@ -14,7 +14,7 @@
 (defun find-file-in-git-repo ()
   (interactive)
   (let* ((repo (find-git-repo default-directory))
-         (files (shell-command-to-string (format "cd %s && git ls-files" repo))))
+         (files (shell-command-to-string (format "cd %s && git ls-files --cached --others --exclude-standard" repo))))
     (find-file
      (concat repo
              (ido-completing-read
