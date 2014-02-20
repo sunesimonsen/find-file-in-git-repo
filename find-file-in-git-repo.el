@@ -1,7 +1,7 @@
 ;;; find-file-in-git-repo.el --- Utility to find files in a git repo
 
+;; Fork of:
 ;; Copyright 2011 atom smith
-
 ;; Author: atom smith
 ;; URL: http://github.com/re5et/find-file-in-git-repo
 ;; Version: 0.1.2
@@ -10,6 +10,26 @@
 
 ;; Using default-directory searches upward for a .git repo directory,
 ;; then, feeds files into ido-completing-read using git ls-files.
+
+(defgroup find-file-in-git-repo nil
+  "Using default-directory searches upward for a .git repo directory,
+then, feeds files into ido-completing-read using git ls-files.")
+
+(defcustom goto-alternate-git-file-patterns
+  (quote (("\\.spec\\.js$" . ".js")
+          ("\\.h$" . ".c")
+          ("Test\\.java$" . ".java")))
+  "Alist of patterns and their replacement to get from an alternate file to the base file.
+
+Example:
+
+'((\"\\\\.spec\\\\.js$\" \".js\")
+  (\"\\\\.h\" \".c$\")
+  (\"\\\\Test.java$\" \".java\"))"
+  :group 'find-file-in-git-repo
+  :type '(repeat (cons (regexp :tag "Regexp matching to replace to get to alternate file name")
+		       (string :tag "Replacement"))))
+
 (defun files-in-git-repo (repo &optional filter regexp-filter)
   (let* ((relative-buffer-file-name (replace-in-string (buffer-file-name) repo ""))
          (grepString (if filter (concat " | grep -e '" filter "'") ""))
@@ -22,7 +42,7 @@
   (let* ((repo (find-git-repo default-directory))
          (files (files-in-git-repo repo regexp-filter))
          (files-count (length files)))
-    
+
     (when (= 1 files-count)
         (find-file (concat repo (car files))))
 
@@ -44,17 +64,16 @@
 (defun goto-alternate-git-file ()
   (interactive)
   (let ((file-name (file-name-nondirectory (buffer-file-name)))
-        (list '(("\\.spec\\.js" ".js")
-                ("\\.h" ".c")))
+        (patterns goto-alternate-git-file-patterns)
         (found nil))
 
 
-    (while (and list (not found))
-      (let* ((config (pop list))
-             (regexp (nth 0 config))
-             (replacement (nth 1 config)))
+    (while (and patterns (not found))
+      (let* ((regexp (caar patterns))
+             (replacement (cdar patterns)))
         (when (string-match regexp file-name)
-          (setq found (replace-match replacement nil nil file-name)))))
+          (setq found (replace-match replacement nil nil file-name))))
+      (setq patterns (cdr patterns)))
 
     (when (not found)
       (setq found (file-name-sans-extension file-name)))
