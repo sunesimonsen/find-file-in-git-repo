@@ -32,10 +32,13 @@ Example:
 
 (defun files-in-git-repo (repo &optional filter regexp-filter)
   (let* ((relative-buffer-file-name (replace-in-string (buffer-file-name) repo ""))
-         (grepString (if filter (concat " | grep -e '" filter "'") ""))
-         (files (shell-command-to-string (format "cd %s && git ls-files --cached --others --exclude-standard%s | grep -ve '%s'" repo grepString relative-buffer-file-name))))
-         (remove-if (lambda (x) (string= "" x))
-                    (split-string files "\n"))))
+         (command-string (concat (format "cd '%s'" repo)
+                                 " && git ls-files --cached --others --exclude-standard"
+                                 (if filter (format " | grep -e '%s'" filter) "")
+                                 (format " | grep -ve '%s'" relative-buffer-file-name)))
+         (files (shell-command-to-string command-string)))
+    (remove-if (lambda (x) (string= "" x))
+               (split-string files "\n"))))
 
 (defun find-file-in-git-repo (&optional initial-input regexp-filter)
   (interactive)
@@ -78,7 +81,12 @@ Example:
     (when (not found)
       (setq found (file-name-sans-extension file-name)))
 
-    (let ((regexp-filter (concat "\\(^\\|/\\)[^/]*" (regexp-quote found) "[^/]*$")))
+
+
+    (let ((regexp-filter (rx (and (or line-start "/") (* (not (any ?/)))
+                                  (eval found)
+                                  (* (not (any ?/)))
+                                  line-end))))
       (find-file-in-git-repo "" regexp-filter))))
 
 ;;; find-file-in-git-repo.el ends here
