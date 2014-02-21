@@ -66,28 +66,20 @@ Example:
 
 (defun goto-alternate-git-file ()
   (interactive)
-  (let ((file-name (file-name-nondirectory (buffer-file-name)))
+  (let* ((file-name (file-name-nondirectory (buffer-file-name)))
         (patterns goto-alternate-git-file-patterns)
-        (found nil))
+        (matching-pattern (cl-find-if (lambda (pattern)
+                                        (string-match (car pattern) file-name))
+                                      patterns))
+        (search-for (if matching-pattern
+                        (replace-regexp-in-string (car matching-pattern) (cdr matching-pattern) file-name)
+                      (file-name-sans-extension file-name)))
+        (regexp-filter (rx (and (or line-start "/") (* (not (any ?/)))
+                                (eval search-for)
+                                (* (not (any ?/)))
+                                line-end))))
 
-
-    (while (and patterns (not found))
-      (let* ((regexp (caar patterns))
-             (replacement (cdar patterns)))
-        (when (string-match regexp file-name)
-          (setq found (replace-match replacement nil nil file-name))))
-      (setq patterns (cdr patterns)))
-
-    (when (not found)
-      (setq found (file-name-sans-extension file-name)))
-
-
-
-    (let ((regexp-filter (rx (and (or line-start "/") (* (not (any ?/)))
-                                  (eval found)
-                                  (* (not (any ?/)))
-                                  line-end))))
-      (find-file-in-git-repo "" regexp-filter))))
+    (find-file-in-git-repo "" regexp-filter)))
 
 ;;; find-file-in-git-repo.el ends here
 
