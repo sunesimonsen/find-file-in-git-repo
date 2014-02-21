@@ -46,16 +46,11 @@ Example:
          (files (files-in-git-repo repo regexp-filter))
          (files-count (length files)))
 
-    (when (= 1 files-count)
-        (find-file (concat repo (car files))))
-
-    (when (< 1 files-count)
-      (find-file
-       (concat repo
-               (ido-completing-read
-                "find in git repo: "
-                files
-                nil nil initial-input))))))
+    (cond ((= files-count 1) (find-file (concat repo (car files))))
+          ((> files-count 1) (find-file (concat repo (ido-completing-read
+                                                      "find in git repo: "
+                                                      files
+                                                      nil nil initial-input)))))))
 
 (defun find-git-repo (dir)
   (if (string= "/" dir)
