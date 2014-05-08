@@ -31,20 +31,25 @@ Example:
 		       (string :tag "Replacement"))))
 
 (defun files-in-git-repo (repo &optional filter regexp-filter)
-  (let* ((relative-buffer-file-name (replace-in-string (buffer-file-name) repo ""))
-         (command-string (concat (format "cd '%s'" repo)
-                                 " && git ls-files --cached --others --exclude-standard"
-                                 (if filter (format " | grep -e '%s'" filter) "")
-                                 (format " | grep -ve '%s'" relative-buffer-file-name)))
-         (files (shell-command-to-string command-string)))
-    (remove-if (lambda (x) (string= "" x))
-               (split-string files "\n"))))
+  (if (not repo)
+      nil
+    (let* ((relative-buffer-file-name (replace-in-string (buffer-file-name) repo ""))
+           (command-string (concat (format "cd '%s'" repo)
+                                   " && git ls-files --cached --others --exclude-standard"
+                                   (if filter (format " | grep -e '%s'" filter) "")
+                                   (format " | grep -ve '%s'" relative-buffer-file-name)))
+           (files (shell-command-to-string command-string)))
+      (remove-if (lambda (x) (string= "" x))
+                 (split-string files "\n")))))
 
 (defun find-file-in-git-repo (&optional initial-input regexp-filter)
   (interactive)
   (let* ((repo (find-git-repo default-directory))
          (files (files-in-git-repo repo regexp-filter))
          (files-count (length files)))
+
+    (if (not repo)
+        (message "%s is not in a git repository" default-directory))
 
     (cond ((= files-count 1) (find-file (concat repo (car files))))
           ((> files-count 1) (find-file (concat repo (ido-completing-read
@@ -54,13 +59,14 @@ Example:
 
 (defun find-git-repo (dir)
   (if (string= "/" dir)
-      (message "not in a git repo.")
+      nil
     (if (file-exists-p (expand-file-name ".git/" dir))
         dir
       (find-git-repo (expand-file-name "../" dir)))))
 
 (defun goto-alternate-git-file ()
   (interactive)
+  (when (buffer-file-name)
   (let* ((file-name (file-name-nondirectory (buffer-file-name)))
         (patterns goto-alternate-git-file-patterns)
         (matching-pattern (cl-find-if (lambda (pattern)
@@ -74,7 +80,7 @@ Example:
                                 (* (not (any ?/)))
                                 line-end))))
 
-    (find-file-in-git-repo "" regexp-filter)))
+    (find-file-in-git-repo "" regexp-filter))))
 
 ;;; find-file-in-git-repo.el ends here
 
