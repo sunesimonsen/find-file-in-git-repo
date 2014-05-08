@@ -3,6 +3,6 @@ currently working in using ido-mode.  To use this you have to have git
 installed and when you run 'find-file-in-git-repo', default-directory
 must be either a git repo or a directory nested in the git repo.
 
-This is a Fork of [https://github.com/re5et/find-file-in-git-repo]
+This is a Fork of https://github.com/re5et/find-file-in-git-repo
 with some new extensions for finding alternative files in git
 repositories.
