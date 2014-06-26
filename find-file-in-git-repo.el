@@ -75,10 +75,10 @@ Example:
         (search-for (if matching-pattern
                         (replace-regexp-in-string (car matching-pattern) (cdr matching-pattern) file-name)
                       (file-name-sans-extension file-name)))
-        (regexp-filter (rx (and (or line-start "/") (* (not (any ?/)))
-                                (eval search-for)
-                                (* (not (any ?/)))
-                                line-end))))
+        (regexp-filter (rx (group (or line-start "/")) (* (not (any ?/)))
+                           (eval search-for)
+                           (* (not (any ?/)))
+                           line-end)))
 
     (find-file-in-git-repo "" regexp-filter))))
 
