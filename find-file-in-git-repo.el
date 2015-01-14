@@ -75,7 +75,7 @@ Example:
         (search-for (if matching-pattern
                         (replace-regexp-in-string (car matching-pattern) (cdr matching-pattern) file-name)
                       (file-name-sans-extension file-name)))
-        (regexp-filter (rx (group (or line-start "/")) (* (not (any ?/)))
+        (regexp-filter (rx (group (or line-start "/"))
                            (eval search-for)
                            (* (not (any ?/)))
                            line-end)))
